@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Log Monitor</title>
+    <style>
+        #log-container {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            padding: 20px;
+            font-family: monospace;
+            height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .log-line {
+            margin: 2px 0;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-time Log Monitor</h1>
+    <div id="log-container"></div>
+
+    <script>
+        const logContainer = document.getElementById('log-container');
+        const maxLines = 1000; // Prevent memory issues
+        
+        function addLogLine(text) {
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.textContent = text;
+            logContainer.appendChild(line);
+            
+            // Auto-scroll to bottom
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Remove old lines if too many
+            while (logContainer.children.length > maxLines) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+        
+        function connectWebSocket() {
+            const ws = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            ws.onmessage = function(event) {
+                addLogLine(event.data);
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket connection closed. Reconnecting...');
+                setTimeout(connectWebSocket, 1000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+        
+        connectWebSocket();
+    </script>
+</body>
+</html>
+
+'''
